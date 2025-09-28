@@ -1,0 +1,42 @@
+# --- Python backend ---
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+.eggs/
+dist/
+build/
+
+# --- Virtual envs ---
+.venv/
+venv/
+ENV/
+env/
+
+# --- Environment files (do NOT commit secrets) ---
+.env
+.env.*
+!.env.example     # allow safe template
+
+# --- Frontend (Vercel / Node.js) ---
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+frontend/dist/
+frontend/.cache/
+
+# --- Logs ---
+*.log
+logs/
+*.pid
+*.seed
+
+# --- OS junk ---
+.DS_Store
+Thumbs.db
+
+# --- IDE / Editor ---
+.vscode/
+.idea/
+*.swp

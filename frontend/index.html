@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AI Research Copilot</title>
+  <style>
+    :root{
+      --bg: #0b1020;
+      --card: rgba(255,255,255,0.08);
+      --border: rgba(255,255,255,0.14);
+      --text: #e8ebf4;
+      --muted: #a7b0c4;
+      --brand: #8b5cf6;   /* primary */
+      --brand-2: #06b6d4; /* accent */
+      --ok: #34d399;
+      --err:#f87171;
+      --warn:#f59e0b;
+      --pill-bg: rgba(139,92,246,.16);
+      --pill-bd: rgba(139,92,246,.35);
+      --code: #0f172a;
+      --answer: rgba(15,23,42,.7);
+      --shadow: 0 20px 40px -20px rgba(0,0,0,.6);
+      --radius: 16px;
+    }
+    * { box-sizing: border-box }
+    html,body{ height:100% }
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, Segoe UI, Roboto, Helvetica, Arial, Apple Color Emoji, Segoe UI Emoji;
+      color: var(--text);
+      background:
+        radial-gradient(60rem 60rem at 10% -20%, rgba(139,92,246,.25), transparent 60%),
+        radial-gradient(50rem 50rem at 110% 10%, rgba(6,182,212,.18), transparent 60%),
+        var(--bg);
+    }
+    .wrap{ max-width: 980px; margin: 56px auto; padding: 0 16px }
+
+    /* Header */
+    .hero{
+      display:flex; align-items:center; justify-content:space-between; gap:16px;
+      margin-bottom: 22px; padding: 18px 20px;
+      border:1px solid var(--border); border-radius: var(--radius);
+      background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.04));
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+    }
+    .hero h1{
+      margin:0; font-weight:700; letter-spacing:.2px;
+      font-size: clamp(22px, 3.6vw, 30px);
+      background: linear-gradient(90deg, #fff, #c7d2fe 30%, #a5f3fc 70%);
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+    }
+    .hero small{ color: var(--muted) }
+
+    /* Cards */
+    .card{
+      margin: 18px 0; padding: 18px 18px;
+      border: 1px solid var(--border); border-radius: var(--radius);
+      background: var(--card); backdrop-filter: blur(8px);
+      box-shadow: var(--shadow);
+    }
+    .card h2{ margin: 0 0 12px; font-size: 18px; color:#eef2ff; letter-spacing:.2px }
+    .row{ display:grid; grid-template-columns: 1fr 220px auto; gap:12px; align-items:end }
+    label{ font-size:12px; color: var(--muted) }
+    input[type="text"]{
+      width:100%; padding:10px 12px; border-radius:12px; border:1px solid var(--border);
+      background: rgba(255,255,255,.06); color:var(--text); outline: none;
+    }
+    input[type="file"]{
+      width:100%; padding:8px; border-radius:12px; border:1px dashed var(--border);
+      background: rgba(255,255,255,.04); color:var(--muted);
+    }
+
+    /* Buttons */
+    .btn{
+      display:inline-flex; align-items:center; gap:8px; cursor:pointer;
+      padding:10px 14px; border-radius:12px; border:1px solid var(--border);
+      background: rgba(255,255,255,.06); color:var(--text);
+      transition: transform .06s ease, box-shadow .2s ease, background .2s ease;
+    }
+    .btn:hover{ transform: translateY(-1px); box-shadow: 0 8px 20px -10px rgba(0,0,0,.6) }
+    .btn.primary{
+      border:0;
+      background: linear-gradient(90deg, var(--brand), var(--brand-2));
+      color:white;
+    }
+
+    .controls{ display:flex; gap:12px; align-items:center; flex-wrap:wrap; margin-top:10px; color: var(--muted) }
+
+    /* Toggle */
+    .toggle{
+      --w:48px; --h:26px; --p:3px;
+      position:relative; display:inline-flex; align-items:center; gap:10px; user-select:none; cursor:pointer;
+      color:var(--text);
+    }
+    .toggle input{ display:none }
+    .track{
+      width:var(--w); height:var(--h); border-radius:999px; border:1px solid var(--border);
+      background: rgba(255,255,255,.08); position:relative; transition: background .2s ease;
+    }
+    .thumb{
+      width: calc(var(--h) - 2*var(--p)); height: calc(var(--h) - 2*var(--p));
+      position:absolute; top:var(--p); left:var(--p);
+      border-radius: 999px; background: white; transition: left .2s ease;
+      box-shadow: 0 6px 16px rgba(0,0,0,.35);
+    }
+    .toggle input:checked + .track{ background: linear-gradient(90deg, var(--brand), var(--brand-2)) }
+    .toggle input:checked + .track .thumb{ left: calc(var(--w) - var(--h) + var(--p)) }
+
+    /* Pills & text blocks */
+    .pill{
+      display:inline-block; padding:3px 10px; border-radius: 999px;
+      background: var(--pill-bg); border: 1px solid var(--pill-bd);
+      color:#eae7ff; font-size:12px; margin:2px;
+    }
+    .muted{ color: var(--muted) }
+    .ok{ color: var(--ok) } .err{ color: var(--err) } .warn{ color: var(--warn) }
+
+    /* Answer & context */
+    .answer, pre{
+      background: var(--answer); color:#e6e9f5; padding:12px 14px; border-radius: 12px;
+      white-space: pre-wrap; border:1px solid rgba(255,255,255,.08);
+    }
+    details summary{ cursor:pointer; }
+    code{ background: rgba(255,255,255,.08); padding:.1rem .35rem; border-radius:6px }
+
+    /* Status line */
+    .status{
+      min-height: 24px; display:flex; align-items:center; gap:10px; color: var(--muted);
+    }
+    .spinner{
+      width:16px; height:16px; border-radius:50%;
+      border:2px solid rgba(255,255,255,.2); border-top-color: #fff; animation:spin 1s linear infinite;
+      display:none;
+    }
+    @keyframes spin{ to{ transform: rotate(360deg) } }
+
+    /* Responsive */
+    @media (max-width: 860px){
+      .row{ grid-template-columns: 1fr }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="hero">
+      <div>
+        <h1>AI Research Copilot</h1>
+        <small class="muted">Upload a PDF → Ask questions → Get cited answers.</small>
+      </div>
+      <button class="btn" id="btnHealth">Check API</button>
+    </div>
+
+    <!-- Upload -->
+    <div class="card">
+      <h2>📄 Upload PDF</h2>
+      <div class="row">
+        <div>
+          <label>PDF file</label><br/>
+          <input type="file" id="pdfFile" accept="application/pdf"/>
+        </div>
+        <div>
+          <label>doc_id</label><br/>
+          <input type="text" id="docId" placeholder="e.g. healthcare" value="healthcare"/>
+        </div>
+        <div style="display:flex;gap:8px;align-items:end">
+          <button class="btn primary" id="btnUpload">Upload & Ingest</button>
+        </div>
+      </div>
+      <div id="uploadMsg" class="muted" style="margin-top:10px"></div>
+      <pre id="uploadOut" style="display:none;margin-top:10px"></pre>
+    </div>
+
+    <!-- Ask -->
+    <div class="card">
+      <h2>💬 Ask a Question</h2>
+      <div class="row" style="grid-template-columns: 1fr auto auto">
+        <div>
+          <label>Your question</label><br/>
+          <input type="text" id="question" placeholder="Ask about your document…"/>
+        </div>
+        <label class="toggle" title="Fast mode">
+          <input type="checkbox" id="fastMode"/>
+          <div class="track"><div class="thumb"></div></div>
+          <span class="muted">Fast mode</span>
+        </label>
+        <div style="display:flex;gap:8px;align-items:end">
+          <button class="btn primary" id="btnAsk">Ask</button>
+        </div>
+      </div>
+      <div class="controls">
+        <span>Fast → <code>top_k=2</code>, <code>verbose=false</code>. Thorough → <code>top_k=5</code>, <code>verbose=true</code>.</span>
+      </div>
+    </div>
+
+    <!-- Response -->
+    <div class="card">
+      <h2>🧠 Response</h2>
+      <div class="status">
+        <div class="spinner" id="spin"></div>
+        <div id="status" class="muted"></div>
+      </div>
+
+      <div style="display:flex;align-items:center;gap:10px;justify-content:space-between">
+        <h3 style="margin:6px 0 6px">Answer</h3>
+        <div style="display:flex; gap:8px">
+          <button class="btn" id="btnCopy" title="Copy answer">Copy</button>
+        </div>
+      </div>
+      <div id="answer" class="answer"></div>
+
+      <h3 style="margin-top:18px">Citations</h3>
+      <div id="cites"></div>
+
+      <details id="ctxDetails" style="margin-top:12px">
+        <summary><strong>Retrieved Context</strong> (shown in Thorough mode)</summary>
+        <pre id="context" style="margin-top:8px"></pre>
+      </details>
+    </div>
+  </div>
+
+  <script>
+    // Set your backend here for local/prod
+    const API_BASE = "http://127.0.0.1:8000";
+
+    const $  = (id) => document.getElementById(id);
+    const set = (el, html) => el.innerHTML = html;
+    const showSpin = (on) => $("spin").style.display = on ? "inline-block" : "none";
+
+    $("btnHealth").onclick = async () => {
+      const el = $("status");
+      set(el, "Pinging API…"); showSpin(true);
+      try{
+        const res = await fetch(`${API_BASE}/health`);
+        const data = await res.json();
+        set(el, `<span class="ok">API OK</span> — env: <code>${data.env}</code> | llm: <code>${data.llm}</code> | embed: <code>${data.embed}</code>`);
+      }catch(e){
+        set(el, `<span class="err">API not reachable</span>`);
+      }finally{ showSpin(false); }
+    };
+
+    $("btnUpload").onclick = async () => {
+      const file = $("pdfFile").files[0];
+      const docId = $("docId").value.trim();
+      const msg = $("uploadMsg");
+      const out = $("uploadOut");
+      out.style.display = "none"; out.textContent = "";
+
+      if (!file){ set(msg, '<span class="warn">Choose a PDF first.</span>'); return; }
+      if (!docId){ set(msg, '<span class="warn">Enter a doc_id.</span>'); return; }
+
+      set(msg, "Uploading…"); showSpin(true);
+      try {
+        const fd = new FormData();
+        fd.append("file", file, file.name);
+        const res = await fetch(`${API_BASE}/ingest/pdf/${encodeURIComponent(docId)}`, { method: "POST", body: fd });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || res.statusText);
+        set(msg, `<span class="ok">Ingested ${data.chunks} chunks into <code>${docId}</code>.</span>`);
+        out.textContent = JSON.stringify(data, null, 2);
+        out.style.display = "block";
+      } catch (e) {
+        set(msg, `<span class="err">${e.message || e}</span>`);
+      } finally { showSpin(false); }
+    };
+
+    $("btnAsk").onclick = async () => {
+      const q = $("question").value.trim();
+      const docId = $("docId").value.trim();
+      const status = $("status");
+      const ans = $("answer");
+      const cites = $("cites");
+      const ctx = $("context");
+      const ctxDetails = $("ctxDetails");
+      const fast = $("fastMode").checked;
+
+      set(status, "Thinking…"); showSpin(true);
+      ans.textContent = ""; cites.innerHTML = ""; ctx.textContent = "";
+      ctxDetails.open = false;
+
+      if (!q){ set(status, '<span class="warn">Enter a question.</span>'); showSpin(false); return; }
+
+      try {
+        const body = { question: q, top_k: fast ? 2 : 5, verbose: !fast };
+        if (docId) body.doc_id = docId;
+
+        const t0 = performance.now();
+        const res = await fetch(`${API_BASE}/chat`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body)
+        });
+        const data = await res.json();
+        const ms = Math.round(performance.now() - t0);
+
+        if (!res.ok) { throw new Error((data && data.detail) ? data.detail : res.statusText); }
+
+        set(status, `<span class="ok">Done in ${ms} ms.</span>`);
+        ans.textContent = data.answer || "";
+
+        if (Array.isArray(data.citations)) {
+          cites.innerHTML = data.citations.map(c => `<span class="pill">${c}</span>`).join(" ");
+        }
+
+        if (!fast && data.context) {
+          ctx.textContent = data.context;
+          ctxDetails.open = true;
+        }
+      } catch (e) {
+        set(status, `<span class="err">${e.message || e}</span>`);
+      } finally { showSpin(false); }
+    };
+
+    $("btnCopy").onclick = async () => {
+      const text = $("answer").textContent || "";
+      if (!text) return;
+      try{
+        await navigator.clipboard.writeText(text);
+        const btn = $("btnCopy");
+        btn.textContent = "Copied!";
+        setTimeout(()=>btn.textContent="Copy", 1000);
+      }catch{}
+    };
+  </script>
+</body>
+</html>

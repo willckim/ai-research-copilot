@@ -19,4 +19,7 @@ class Document(Base):
     embedding = Column(Vector(settings.EMBED_DIM))
 
 def init_db():
+    # ✅ Ensure pgvector extension exists before creating tables
+    with engine.begin() as conn:
+        conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
     Base.metadata.create_all(engine)

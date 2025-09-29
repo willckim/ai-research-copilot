@@ -1,0 +1,36 @@
+# Python cache / venv
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.log
+*.sqlite3
+*.db
+.venv/
+env/
+venv/
+
+# Environment files
+.env
+.env.prod
+*.env
+
+# OS / IDE files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Git
+.git
+.gitignore
+
+# Local PDFs, data, tmp
+*.pdf
+*.csv
+*.tsv
+*.xlsx
+*.xls
+*.docx
+*.tmp
+tmp/

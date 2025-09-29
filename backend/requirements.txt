@@ -1,0 +1,14 @@
+fastapi
+uvicorn[standard]
+sqlalchemy
+psycopg2-binary
+pgvector
+python-dotenv
+sentence-transformers
+requests
+openai
+pydantic
+ftfy
+Unidecode
+pypdf 
+python-multipart

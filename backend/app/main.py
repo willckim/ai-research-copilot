@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from .routers import ingest, chat
+from .db import init_db  # ✅ import init_db
 
 app = FastAPI(title="AI Research Copilot (Open-Source)", version="0.1.0")
 
@@ -12,6 +13,11 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+@app.on_event("startup")
+def on_startup():
+    # ✅ Run DB init at app startup
+    init_db()
 
 @app.get("/")
 def root():

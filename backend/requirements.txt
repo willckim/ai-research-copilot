@@ -8,7 +8,8 @@ sentence-transformers
 requests
 openai
 pydantic
+pydantic-settings
 ftfy
 Unidecode
-pypdf 
+pypdf
 python-multipart

@@ -35,8 +35,6 @@
         var(--bg);
     }
     .wrap{ max-width: 980px; margin: 56px auto; padding: 0 16px }
-
-    /* Header */
     .hero{
       display:flex; align-items:center; justify-content:space-between; gap:16px;
       margin-bottom: 22px; padding: 18px 20px;
@@ -52,8 +50,6 @@
       -webkit-background-clip: text; background-clip: text; color: transparent;
     }
     .hero small{ color: var(--muted) }
-
-    /* Cards */
     .card{
       margin: 18px 0; padding: 18px 18px;
       border: 1px solid var(--border); border-radius: var(--radius);
@@ -71,8 +67,6 @@
       width:100%; padding:8px; border-radius:12px; border:1px dashed var(--border);
       background: rgba(255,255,255,.04); color:var(--muted);
     }
-
-    /* Buttons */
     .btn{
       display:inline-flex; align-items:center; gap:8px; cursor:pointer;
       padding:10px 14px; border-radius:12px; border:1px solid var(--border);
@@ -85,10 +79,7 @@
       background: linear-gradient(90deg, var(--brand), var(--brand-2));
       color:white;
     }
-
     .controls{ display:flex; gap:12px; align-items:center; flex-wrap:wrap; margin-top:10px; color: var(--muted) }
-
-    /* Toggle */
     .toggle{
       --w:48px; --h:26px; --p:3px;
       position:relative; display:inline-flex; align-items:center; gap:10px; user-select:none; cursor:pointer;
@@ -107,8 +98,6 @@
     }
     .toggle input:checked + .track{ background: linear-gradient(90deg, var(--brand), var(--brand-2)) }
     .toggle input:checked + .track .thumb{ left: calc(var(--w) - var(--h) + var(--p)) }
-
-    /* Pills & text blocks */
     .pill{
       display:inline-block; padding:3px 10px; border-radius: 999px;
       background: var(--pill-bg); border: 1px solid var(--pill-bd);
@@ -116,30 +105,20 @@
     }
     .muted{ color: var(--muted) }
     .ok{ color: var(--ok) } .err{ color: var(--err) } .warn{ color: var(--warn) }
-
-    /* Answer & context */
     .answer, pre{
       background: var(--answer); color:#e6e9f5; padding:12px 14px; border-radius: 12px;
       white-space: pre-wrap; border:1px solid rgba(255,255,255,.08);
     }
     details summary{ cursor:pointer; }
     code{ background: rgba(255,255,255,.08); padding:.1rem .35rem; border-radius:6px }
-
-    /* Status line */
-    .status{
-      min-height: 24px; display:flex; align-items:center; gap:10px; color: var(--muted);
-    }
+    .status{ min-height: 24px; display:flex; align-items:center; gap:10px; color: var(--muted) }
     .spinner{
       width:16px; height:16px; border-radius:50%;
       border:2px solid rgba(255,255,255,.2); border-top-color: #fff; animation:spin 1s linear infinite;
       display:none;
     }
     @keyframes spin{ to{ transform: rotate(360deg) } }
-
-    /* Responsive */
-    @media (max-width: 860px){
-      .row{ grid-template-columns: 1fr }
-    }
+    @media (max-width: 860px){ .row{ grid-template-columns: 1fr } }
   </style>
 </head>
 <body>
@@ -221,20 +200,30 @@
   </div>
 
   <script>
-    // Set your backend here for local/prod
-    const API_BASE = "http://127.0.0.1:8000";
+    // Use local API in dev, Render API in prod
+    const API_BASE =
+      (location.hostname === "localhost" || location.hostname === "127.0.0.1")
+        ? "http://127.0.0.1:8000"
+        : "https://ai-research-copilot-dj7p.onrender.com";
 
     const $  = (id) => document.getElementById(id);
     const set = (el, html) => el.innerHTML = html;
     const showSpin = (on) => $("spin").style.display = on ? "inline-block" : "none";
 
+    // Check API: hit the root (/) which already returns {"ok": true, ...}
     $("btnHealth").onclick = async () => {
       const el = $("status");
       set(el, "Pinging API…"); showSpin(true);
       try{
-        const res = await fetch(`${API_BASE}/health`);
+        const res = await fetch(`${API_BASE}/`);
         const data = await res.json();
-        set(el, `<span class="ok">API OK</span> — env: <code>${data.env}</code> | llm: <code>${data.llm}</code> | embed: <code>${data.embed}</code>`);
+        const extra = [
+          data.env ? `env: <code>${data.env}</code>` : null,
+          data.llm ? `llm: <code>${data.llm}</code>` : null,
+          data.embed ? `embed: <code>${data.embed}</code>` : null,
+          data.service ? `service: <code>${data.service}</code>` : null,
+        ].filter(Boolean).join(" | ");
+        set(el, `<span class="ok">API OK</span>${extra ? " — " + extra : ""}`);
       }catch(e){
         set(el, `<span class="err">API not reachable</span>`);
       }finally{ showSpin(false); }
@@ -256,12 +245,13 @@
         fd.append("file", file, file.name);
         const res = await fetch(`${API_BASE}/ingest/pdf/${encodeURIComponent(docId)}`, { method: "POST", body: fd });
         const data = await res.json();
-        if (!res.ok) throw new Error(data.detail || res.statusText);
+        if (!res.ok) throw new Error(data.detail || res.statusText || "Upload failed");
         set(msg, `<span class="ok">Ingested ${data.chunks} chunks into <code>${docId}</code>.</span>`);
         out.textContent = JSON.stringify(data, null, 2);
         out.style.display = "block";
       } catch (e) {
-        set(msg, `<span class="err">${e.message || e}</span>`);
+        const msgText = e?.message || (typeof e === "string" ? e : "Upload failed");
+        set(msg, `<span class="err">${msgText}</span>`);
       } finally { showSpin(false); }
     };
 
@@ -294,7 +284,7 @@
         const data = await res.json();
         const ms = Math.round(performance.now() - t0);
 
-        if (!res.ok) { throw new Error((data && data.detail) ? data.detail : res.statusText); }
+        if (!res.ok) { throw new Error((data && data.detail) ? data.detail : res.statusText || "Request failed"); }
 
         set(status, `<span class="ok">Done in ${ms} ms.</span>`);
         ans.textContent = data.answer || "";
@@ -308,7 +298,8 @@
           ctxDetails.open = true;
         }
       } catch (e) {
-        set(status, `<span class="err">${e.message || e}</span>`);
+        const msgText = e?.message || (typeof e === "string" ? e : "Request failed");
+        set(status, `<span class="err">${msgText}</span>`);
       } finally { showSpin(false); }
     };
 
